@@ -104,4 +104,4 @@ class ImprovedOuterAgent(agent.Agent):
                     self.hints[(player,action.card_index+i)] = self.hints[(player,action.card_index+i+1)]
                     self.hints[(player,action.card_index+i+1)] = set()
 
-agent.register("mine1", "Ben & Mark's Agent", ImprovedOuterAgent)
+agent.register("impouter", "Improved Outer Agent", ImprovedOuterAgent)
