@@ -35,6 +35,7 @@ def needs_save(card, board, trash, played):
 
     count -= trash.count((card.color, card.rank)) + played.count((card.color, card.rank))
 
+
     # If there are no remaining cards of this color and rank, return true
     if count == 0:
         return True
@@ -59,15 +60,15 @@ class MyAgent(agent.Agent):
         for player,hand in enumerate(hands):
             for card_index in range(5):
                 if (player,card_index) not in self.hints:
-                    print("missing hints")
+                    #print("missing hints")
                     self.hints[(player,card_index)] = set()
             if (player) not in self.colorHintsToProcess:
                 self.colorHintsToProcess[(player)] = ""
             if (player) not in self.rankHintsToProcess:
                 self.rankHintsToProcess[(player)] = ""
 
-        for i in hands[1]:
-            print("Player 1 Card " + str(i))
+        # for i in hands[1]:
+        #     print("Player 1 Card " + str(i))
         
         # for h, r in self.rankHintsToProcess.items():
         #     print("Rank hint to process || Player = " + str(h) + " Rank = " + str(r)) 
@@ -94,7 +95,7 @@ class MyAgent(agent.Agent):
                 #print("Color hint to process || Player = " + str(h) + " Color = " + str(c)) 
                 if(util.has_property(util.has_color(c), knowledge[h][i])):
                     if len(self.hints[(h,i)]) == 0:
-                        print("Add hint to player " + str(h) + " card " + str(i) + " chop card " + str(chop))
+                        #print("Add hint to player " + str(h) + " card " + str(i) + " chop card " + str(chop))
                         if i == chop:
                             self.hints[(h,i)].add(format_hint(SAVE_CLUE))
                         else:
@@ -109,7 +110,7 @@ class MyAgent(agent.Agent):
                     continue
                 #print("Rank hint to process || Player = " + str(h) + " Rank = " + str(r)) 
                 if(util.has_property(util.has_rank(r), knowledge[h][i])):
-                    print("Add hint to player " + str(h) + " card " + str(i) + " chop card " + str(chop))
+                    #print("Add hint to player " + str(h) + " card " + str(i) + " chop card " + str(chop))
                     if len(self.hints[(h,i)]) == 0:
                         if i == chop:
                             self.hints[(h,i)].add(format_hint(SAVE_CLUE))
@@ -118,8 +119,8 @@ class MyAgent(agent.Agent):
                     self.hints[(h,i)].add(format_hint(HINT_RANK))
             self.rankHintsToProcess[h] = ""
 
-        for player, index in self.hints:
-            print("Player " + str(player) + " index " + str(index) + " " + str(self.hints[player, index]))
+        # for player, index in self.hints:
+        #     print("Player " + str(player) + " index " + str(index) + " " + str(self.hints[player, index]))
         
         # Known hints about myself
         known = [""]*5
@@ -159,11 +160,15 @@ class MyAgent(agent.Agent):
                             if random.random() < 0.5:
                                 hintcolor = True
                             if hintcolor and ("color" not in self.hints[(player, card_index)]):
-                                print("Play Clue " + str(self.hints[(player, card_index)]))
+                                #print("Play Clue " + str(self.hints[(player, card_index)]))
                                 return Action(HINT_COLOR, player=player, color=card.color)
-                            if not hintcolor and ("rank" not in self.hints[(player, card_index)]):
-                                print("Play Clue " + str(self.hints[(player, card_index)]))
+                            elif hintcolor and"rank" not in self.hints[(player, card_index)]:
                                 return Action(HINT_RANK, player=player, rank=card.rank)    
+                            if not hintcolor and ("rank" not in self.hints[(player, card_index)]):
+                                #print("Play Clue " + str(self.hints[(player, card_index)]))
+                                return Action(HINT_RANK, player=player, rank=card.rank)
+                            elif not hintcolor and "rank" not in self.hints[(player, card_index)]:
+                                return Action(HINT_RANK, player=player, rank=card.rank)       
 
 
         #See if we need to give any save clues
@@ -175,33 +180,38 @@ class MyAgent(agent.Agent):
                 # Find chop of next player
                 #print("Trying Save Clue")
                 tnextPlayerChop = -1
-                for i in range(4, -1, -1):
+                for i in range(len(hands[player]) - 1, -1, -1):
                     # for s in self.hints[(player, i)]:
                     #     print("player " + str(player) + " card index: " + str(i) + " hint: " + str(s))
 
                     if len(self.hints[(player, i)]) == 0:
-                        print("current player " + str(self.pnr) + " checking chop of player " + str(player) + " chop card: " + str(i))
+                        #print("current player " + str(self.pnr) + " checking chop of player " + str(player) + " chop card: " + str(i))
                         tnextPlayerChop = i
                         break
 
                 # If next player doesn't have a chop, skip this player
                 if tnextPlayerChop == -1:
-                    print("no chop found")
+                    #print("no chop found")
                     continue
 
                 # If they do have a chop, check if chop needs to be saved
                 card = hand[tnextPlayerChop]
-                print("Check Save clue")
+                #print("Check Save clue")
                 if needs_save(card, board, trash, played):
                     #print("CHOP INDEX SAVE " + str(tnextPlayerChop) + " Player No. " + str(player) + str(self.pnr) + " Hand " + str(hand) + " hints: " + str(self.hints[(player,i)]))
                     hintcolor = False
-                    if random.random() < 0:
+                    if random.random() < 0.5:
                         hintcolor = True
                     if hintcolor and ("color" not in self.hints[(player, card_index)]):
-                        print("Play Clue " + str(self.hints[(player, card_index)]))
+                        #print("Play Clue " + str(self.hints[(player, card_index)]))
                         return Action(HINT_COLOR, player=player, color=card.color)
+                    elif hintcolor and"rank" not in self.hints[(player, card_index)]:
+                        return Action(HINT_RANK, player=player, rank=card.rank)    
+                    
                     if not hintcolor and ("rank" not in self.hints[(player, card_index)]):
-                        print("Play Clue " + str(self.hints[(player, card_index)]))
+                        #print("Play Clue " + str(self.hints[(player, card_index)]))
+                        return Action(HINT_RANK, player=player, rank=card.rank)
+                    elif not hintcolor and "rank" not in self.hints[(player, card_index)]:
                         return Action(HINT_RANK, player=player, rank=card.rank)    
  
 
@@ -210,33 +220,41 @@ class MyAgent(agent.Agent):
             if util.is_playable(k, board):
                 return Action(PLAY, card_index=i)
 
-        # If we could not play a card and cannot give any helpful clues, discard the chop 
-        if chop != -1:
-            print("Discarding Chop")
-            return Action(DISCARD, card_index=chop)
-
         # Try to play a play clue if we have extra hits to spare
-        print("hits " + str(hits))
+        #print("hits " + str(hits))
         best_card = -1
         max_probability = 0
-        if hits > 1:
-            for player, index in self.hints:
-                if player == self.pnr:
-                    if "play" in self.hints[(player, index)]:
-                        #print("TEST2")
-                        prob = util.probability(util.playable(board), my_knowledge[index])
-                        #print("Prob" + str(prob))
-                        if prob > max_probability:
-                            max_probability = prob
-                            best_card = index
-            if best_card != -1:
-                print("Play off of a play clue " + str(best_card) + " prob " + str(max_probability))
-                return Action(PLAY, card_index=best_card)
-
         if hits > 0:
             for player, index in self.hints:
                 if player == self.pnr:
-                    if  "save" in self.hints[(player, index)]:
+                    if "play" in self.hints[(player, index)]:
+                        # prob = util.probability(util.playable(board), my_knowledge[index])
+                        # if prob > max_probability:
+                        #     max_probability = prob
+                        #     best_card = index
+                        #print("Play off of a play clue " + str(best_card) + " prob " + str(max_probability))
+                        return Action(PLAY, card_index=index)
+            # if best_card != -1:
+            #     print("Play off of a play clue " + str(best_card) + " prob " + str(max_probability))
+            #     return Action(PLAY, card_index=best_card)
+            
+        # If there is a card that has no chance of being playable, discard that card
+        for i,k in enumerate(my_knowledge):
+            if util.is_useless(k, board):
+                #print("CARD IS NOT PLAYABLE" + str(i))
+                return Action(DISCARD, card_index=i)
+
+        # If we could not play a card and cannot give any helpful clues, discard the chop 
+        if chop != -1:
+            #print("Discarding Chop")
+            return Action(DISCARD, card_index=chop)
+        
+        best_card = -1
+        max_probability = 0
+        if hits > 0:
+            for player, index in self.hints:
+                if player == self.pnr:
+                    if  "save" in self.hints[(player, index)] or "play" in self.hints[(player, index)]:
                         #print("TEST2")
                         prob = util.probability(util.playable(board), my_knowledge[index])
                         #print("Prob" + str(prob))
@@ -244,7 +262,7 @@ class MyAgent(agent.Agent):
                             max_probability = prob
                             best_card = index
             if best_card != -1:
-                print("Play off of a save clue " + str(best_card) + " prob " + str(max_probability))
+                #print("Play off of a save clue " + str(best_card) + " prob " + str(max_probability))
                 return Action(PLAY, card_index=best_card)
             
 
@@ -255,7 +273,7 @@ class MyAgent(agent.Agent):
         # PLAY CLUE: assume all "play clues" are delayed play clues (meaning don't play them immediately)
 
         # Otherwise just choose a random action (for now)
-        print("random choice")
+        #print("random choice")
         return random.choice(valid_actions)
     
     
@@ -270,7 +288,7 @@ class MyAgent(agent.Agent):
         else:
             debug+=" Hint Rank "
 
-        print(debug + " | card ind: " + str(action.card_index) + " | color: " + str(action.color) + " | rank: " + str(action.rank))
+        #print(debug + " | card ind: " + str(action.card_index) + " | color: " + str(action.color) + " | rank: " + str(action.rank))
         # If we play or discard, move our explanation accordingly
         if action.type in [PLAY, DISCARD]:
             if (player,action.card_index) in self.hints:
