@@ -66,6 +66,15 @@ class MyAgent(agent.Agent):
             if (player) not in self.rankHintsToProcess:
                 self.rankHintsToProcess[(player)] = ""
 
+        for i in hands[1]:
+            print("Player 1 Card " + str(i))
+        
+        # for h, r in self.rankHintsToProcess.items():
+        #     print("Rank hint to process || Player = " + str(h) + " Rank = " + str(r)) 
+        
+        # for h, c in self.colorHintsToProcess.items():
+        #     print("Color hint to process || Player = " + str(h) + " Color = " + str(c)) 
+
         my_knowledge = knowledge[nr]
 
         # Get our chop before processing hint
@@ -78,7 +87,10 @@ class MyAgent(agent.Agent):
         # Process color hints
         for h, c in self.colorHintsToProcess.items():
             for i in range(5):
-                if(util.has_property(util.has_color(c), my_knowledge[i])):
+                if(c == ""):
+                    continue
+                #print("Color hint to process || Player = " + str(h) + " Color = " + str(c)) 
+                if(util.has_property(util.has_color(c), knowledge[h][i])):
                     if len(self.hints[(h,i)]) == 0:
                         self.hints[(h,i)].add(format_hint(HINT_COLOR))
                         print("Add hint to player " + str(h) + " card " + str(i))
@@ -90,8 +102,11 @@ class MyAgent(agent.Agent):
 
         # Process rank hints
         for h, r in self.rankHintsToProcess.items():
-            for i in range(len(hands[h])):
-                if(util.has_property(util.has_rank(r), my_knowledge[i])):
+            for i in range(5):
+                if(r == ""):
+                    continue
+                #print("Rank hint to process || Player = " + str(h) + " Rank = " + str(r)) 
+                if(util.has_property(util.has_rank(r), knowledge[h][i])):
                     self.hints[(h,i)].add(format_hint(HINT_RANK))
                     print("Add hint to player " + str(h) + " card " + str(i))
                     if len(self.hints[(h,i)]) == 0:
@@ -100,6 +115,9 @@ class MyAgent(agent.Agent):
                         else:
                             self.hints[(h,i)].add(format_hint(PLAY_CLUE))
             self.rankHintsToProcess[h] = ""
+
+        for player, index in self.hints:
+            print("Player " + str(player) + " index " + str(index) + " " + str(self.hints[player, index]))
         
         # Known hints about myself
         known = [""]*5
@@ -118,15 +136,10 @@ class MyAgent(agent.Agent):
 
         # Get next player's chop
         nextPlayerChop = -1
-        playerNo = (self.pnr + 1 ) % len(hands)
+        playerNo = (self.pnr + 1 )% len(hands)
         
-        for i in range(len(hands[playerNo]) - 1, -1, -1):
-
-            for s in self.hints[(playerNo, i)]:
-                print("card index: " + str(i) + " hint: " + str(s))
-
+        for i in range(4, -1, -1):
             if len(self.hints[(playerNo, i)]) == 0:
-                print("current player " + str(self.pnr) + " checking chop of player " + str(playerNo) + " chop card: " + str(i))
                 nextPlayerChop = i
                 break
 
@@ -139,7 +152,8 @@ class MyAgent(agent.Agent):
             for player,hand in enumerate(hands):
                 if player != nr:
                     for card_index,card in enumerate(hand):
-                        if card.is_playable(board):                              
+                        if card.is_playable(board) and len(self.hints[(player, card_index)]) == 0:  
+                            print("Play Clue " + str(self.hints[(player, card_index)]))                            
                             if random.random() < 0.5:
                                 return Action(HINT_COLOR, player=player, color=card.color)
                             return Action(HINT_RANK, player=player, rank=card.rank)
@@ -152,10 +166,12 @@ class MyAgent(agent.Agent):
                     continue
                 # Find chop of next player
                 tnextPlayerChop = -1
-                for i in range(len(hand) - 1, -1, -1):
-                    # for s in self.hints[player, i]:
-                    #     print("card index: " + str(i) + " hints seen " + str(s))
-                    if len(self.hints[player, i]) == 0:
+                for i in range(4, -1, -1):
+                    for s in self.hints[(playerNo, i)]:
+                        print("card index: " + str(i) + " hint: " + str(s))
+
+                    if len(self.hints[(player, i)]) == 0:
+                        print("current player " + str(self.pnr) + " checking chop of player " + str(player) + " chop card: " + str(i))
                         tnextPlayerChop = i
                         break
 
