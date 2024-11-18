@@ -12,9 +12,9 @@ def format_hint(h):
     if h == HINT_COLOR:
         return "color"
     elif h == PLAY_CLUE:
-        return "play clue"
+        return "play"
     elif h == SAVE_CLUE:
-        return "save clue"
+        return "save"
     return "rank"
 
 # Check if a card needs to be saved
@@ -77,27 +77,29 @@ class MyAgent(agent.Agent):
 
         my_knowledge = knowledge[nr]
 
-        # Get our chop before processing hint
-        chop = -1
-        for i in range(4, -1, -1):
-            if len(self.hints[((self.pnr + 1) % len(hands)), i]) == 0:
-                chop = i
-                break
+        
+
 
         # Process color hints
         for h, c in self.colorHintsToProcess.items():
+            # Get the chop of the player before processing hint
+            chop = -1
+            for i in range(4, -1, -1):
+                if len(self.hints[(h, i)]) == 0:
+                    chop = i
+                    break
             for i in range(5):
                 if(c == ""):
                     continue
                 #print("Color hint to process || Player = " + str(h) + " Color = " + str(c)) 
                 if(util.has_property(util.has_color(c), knowledge[h][i])):
                     if len(self.hints[(h,i)]) == 0:
-                        self.hints[(h,i)].add(format_hint(HINT_COLOR))
-                        print("Add hint to player " + str(h) + " card " + str(i))
+                        print("Add hint to player " + str(h) + " card " + str(i) + " chop card " + str(chop))
                         if i == chop:
                             self.hints[(h,i)].add(format_hint(SAVE_CLUE))
                         else:
                             self.hints[(h,i)].add(format_hint(PLAY_CLUE))
+                        self.hints[(h,i)].add(format_hint(HINT_COLOR))
             self.colorHintsToProcess[h] = ""
 
         # Process rank hints
@@ -107,13 +109,13 @@ class MyAgent(agent.Agent):
                     continue
                 #print("Rank hint to process || Player = " + str(h) + " Rank = " + str(r)) 
                 if(util.has_property(util.has_rank(r), knowledge[h][i])):
-                    self.hints[(h,i)].add(format_hint(HINT_RANK))
-                    print("Add hint to player " + str(h) + " card " + str(i))
+                    print("Add hint to player " + str(h) + " card " + str(i) + " chop card " + str(chop))
                     if len(self.hints[(h,i)]) == 0:
                         if i == chop:
                             self.hints[(h,i)].add(format_hint(SAVE_CLUE))
                         else:
                             self.hints[(h,i)].add(format_hint(PLAY_CLUE))
+                    self.hints[(h,i)].add(format_hint(HINT_RANK))
             self.rankHintsToProcess[h] = ""
 
         for player, index in self.hints:
@@ -153,10 +155,16 @@ class MyAgent(agent.Agent):
                 if player != nr:
                     for card_index,card in enumerate(hand):
                         if card.is_playable(board) and len(self.hints[(player, card_index)]) == 0:  
-                            print("Play Clue " + str(self.hints[(player, card_index)]))                            
+                            hintcolor = False
                             if random.random() < 0.5:
+                                hintcolor = True
+                            if hintcolor and ("color" not in self.hints[(player, card_index)]):
+                                print("Play Clue " + str(self.hints[(player, card_index)]))
                                 return Action(HINT_COLOR, player=player, color=card.color)
-                            return Action(HINT_RANK, player=player, rank=card.rank)
+                            if not hintcolor and ("rank" not in self.hints[(player, card_index)]):
+                                print("Play Clue " + str(self.hints[(player, card_index)]))
+                                return Action(HINT_RANK, player=player, rank=card.rank)    
+
 
         #See if we need to give any save clues
         if hints > 0:
@@ -165,10 +173,11 @@ class MyAgent(agent.Agent):
                 if player == self.pnr:
                     continue
                 # Find chop of next player
+                #print("Trying Save Clue")
                 tnextPlayerChop = -1
                 for i in range(4, -1, -1):
-                    for s in self.hints[(playerNo, i)]:
-                        print("card index: " + str(i) + " hint: " + str(s))
+                    # for s in self.hints[(player, i)]:
+                    #     print("player " + str(player) + " card index: " + str(i) + " hint: " + str(s))
 
                     if len(self.hints[(player, i)]) == 0:
                         print("current player " + str(self.pnr) + " checking chop of player " + str(player) + " chop card: " + str(i))
@@ -182,32 +191,71 @@ class MyAgent(agent.Agent):
 
                 # If they do have a chop, check if chop needs to be saved
                 card = hand[tnextPlayerChop]
+                print("Check Save clue")
                 if needs_save(card, board, trash, played):
                     #print("CHOP INDEX SAVE " + str(tnextPlayerChop) + " Player No. " + str(player) + str(self.pnr) + " Hand " + str(hand) + " hints: " + str(self.hints[(player,i)]))
-                    if random.random() < 0.5:
+                    hintcolor = False
+                    if random.random() < 0:
+                        hintcolor = True
+                    if hintcolor and ("color" not in self.hints[(player, card_index)]):
+                        print("Play Clue " + str(self.hints[(player, card_index)]))
                         return Action(HINT_COLOR, player=player, color=card.color)
-                    return Action(HINT_RANK, player=player, rank=card.rank)
+                    if not hintcolor and ("rank" not in self.hints[(player, card_index)]):
+                        print("Play Clue " + str(self.hints[(player, card_index)]))
+                        return Action(HINT_RANK, player=player, rank=card.rank)    
  
 
         # Play any playable cards
         for i,k in enumerate(my_knowledge):
             if util.is_playable(k, board):
                 return Action(PLAY, card_index=i)
-                          
-        # Try to play a play clue
 
-        # If we could not play a card and cannot give any helpful clues, discard the chop
+        # If we could not play a card and cannot give any helpful clues, discard the chop 
         if chop != -1:
+            print("Discarding Chop")
             return Action(DISCARD, card_index=chop)
+
+        # Try to play a play clue if we have extra hits to spare
+        print("hits " + str(hits))
+        best_card = -1
+        max_probability = 0
+        if hits > 1:
+            for player, index in self.hints:
+                if player == self.pnr:
+                    if "play" in self.hints[(player, index)]:
+                        #print("TEST2")
+                        prob = util.probability(util.playable(board), my_knowledge[index])
+                        #print("Prob" + str(prob))
+                        if prob > max_probability:
+                            max_probability = prob
+                            best_card = index
+            if best_card != -1:
+                print("Play off of a play clue " + str(best_card) + " prob " + str(max_probability))
+                return Action(PLAY, card_index=best_card)
+
+        if hits > 0:
+            for player, index in self.hints:
+                if player == self.pnr:
+                    if  "save" in self.hints[(player, index)]:
+                        #print("TEST2")
+                        prob = util.probability(util.playable(board), my_knowledge[index])
+                        #print("Prob" + str(prob))
+                        if prob > max_probability:
+                            max_probability = prob
+                            best_card = index
+            if best_card != -1:
+                print("Play off of a save clue " + str(best_card) + " prob " + str(max_probability))
+                return Action(PLAY, card_index=best_card)
+            
+
         
         # If we do not have a chop, then play the card that has the highest probability of being playable
-
-        # Play a save clue
 
         # HINTS:
         # PLAY CLUE: assume all "play clues" are delayed play clues (meaning don't play them immediately)
 
         # Otherwise just choose a random action (for now)
+        print("random choice")
         return random.choice(valid_actions)
     
     
