@@ -31,6 +31,11 @@ class ImprovedOuterAgent(agent.Agent):
 
         my_knowledge = knowledge[nr]
 
+        # Discard useless cards
+        for i, k in enumerate(my_knowledge):
+            if util.is_useless(k, board):
+                return Action(DISCARD, card_index=i)
+
         # Playable cards
         for i, k in enumerate(my_knowledge):
             if util.is_playable(k, board):
@@ -76,13 +81,13 @@ class ImprovedOuterAgent(agent.Agent):
 
             playables = playables[1:]
 
-        # Fallback: Check for unhinted "5s" in teammates' hands
+        # Fallback: Check for unhinted 5 cards in teammates' hands
         if hints > 0:
             for player, hand in enumerate(hands):
                 if player != nr:
                     for card_index, card in enumerate(hand):
                         if card.rank == 5 and HINT_RANK not in self.hints[(player, card_index)]:
-                            # Hint the "5" if not already hinted
+                            # Hint the 5 if not already hinted
                             self.hints[(player, card_index)].add(HINT_RANK)
                             return Action(HINT_RANK, player=player, rank=5)
 
