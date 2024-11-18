@@ -54,7 +54,8 @@ class MyAgent(agent.Agent):
         self.hand = None
         self.hintsSetup = False
     def get_action(self, nr, hands, knowledge, trash, played, board, valid_actions, hints, hits, cards_left):
-            
+
+        # Set up hint lists and dictionaries
         for player,hand in enumerate(hands):
             for card_index in range(5):
                 if (player,card_index) not in self.hints:
@@ -67,7 +68,7 @@ class MyAgent(agent.Agent):
 
         my_knowledge = knowledge[nr]
 
-        # Get chop before processing hint
+        # Get our chop before processing hint
         chop = -1
         for i in range(4, -1, -1):
             if len(self.hints[((self.pnr + 1) % len(hands)), i]) == 0:
