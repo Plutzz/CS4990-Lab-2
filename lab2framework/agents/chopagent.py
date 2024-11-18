@@ -44,7 +44,7 @@ def needs_save(card, board, trash, played):
     return False
 
 
-class MyAgent(agent.Agent):
+class ChopAgent(agent.Agent):
     def __init__(self, name, pnr):
         self.name = name
         self.colorHintsToProcess = {}
@@ -241,7 +241,6 @@ class MyAgent(agent.Agent):
         # If there is a card that has no chance of being playable, discard that card
         for i,k in enumerate(my_knowledge):
             if util.is_useless(k, board):
-                #print("CARD IS NOT PLAYABLE" + str(i))
                 return Action(DISCARD, card_index=i)
 
         # If we could not play a card and cannot give any helpful clues, discard the chop 
@@ -304,4 +303,4 @@ class MyAgent(agent.Agent):
             self.rankHintsToProcess[action.player] = action.rank
                    
 
-agent.register("mine", "Benjamin and Mark's Agent", MyAgent)
+agent.register("chop", "Chop Agent", ChopAgent)
