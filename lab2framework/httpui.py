@@ -12,7 +12,7 @@ import sys
 import traceback
 import threading
 import agent
-from cgi import parse_header, parse_multipart
+#from cgi import parse_header, parse_multipart
 from urllib.parse import parse_qs
 from serverconf import HOST_NAME, PORT_NUMBER
 import importlib
