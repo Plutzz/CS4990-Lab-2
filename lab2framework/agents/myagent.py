@@ -31,11 +31,6 @@ class ImprovedOuterAgent(agent.Agent):
 
         my_knowledge = knowledge[nr]
 
-        # Discard useless cards
-        for i, k in enumerate(my_knowledge):
-            if util.is_useless(k, board):
-                return Action(DISCARD, card_index=i)
-
         # Playable cards
         for i, k in enumerate(my_knowledge):
             if util.is_playable(k, board):
